@@ -32,8 +32,12 @@ export class ExpenseController {
 
   @Post()
   // @Version('1')
-  async createExpense(@Body() data: Expense, @Res() response: any) {
-    const expense = await this.expenseService.createExpense(data);
+  async createExpense(
+    @Body() data: Expense,
+    @Res() response: any,
+    @Req() request: any,
+  ) {
+    const expense = await this.expenseService.createExpense(data, request);
 
     return response.status(201).json({
       message: 'success',

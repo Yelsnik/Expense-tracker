@@ -18,8 +18,9 @@ export class ExpenseService {
     @InjectModel(Expense.name) private expenseModel: Model<Expense>,
   ) {}
 
-  async createExpense(data: Expense): Promise<Expense> {
+  async createExpense(data: Expense, req: any): Promise<Expense> {
     try {
+      data.user = req.user._id;
       return await this.expenseModel.create(data);
     } catch (err) {
       throw new Error(`${err.message}`);
@@ -28,7 +29,7 @@ export class ExpenseService {
 
   async getExpenses(request?: any): Promise<Expense[]> {
     const features = new ApiFeatures(
-      this.expenseModel.find().populate('user'),
+      this.expenseModel.find({ user: request.user._id }),
       request.query,
     )
       .filter()

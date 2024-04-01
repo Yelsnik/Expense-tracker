@@ -3,6 +3,8 @@ import mongoose, { HydratedDocument } from 'mongoose';
 import { User } from 'src/auth/auth.schema';
 import { Types } from 'mongoose';
 import { Document } from 'mongoose';
+import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContextHost } from '@nestjs/core/helpers/execution-context-host';
 
 export type ExpenseDocument = HydratedDocument<Expense>;
 
@@ -13,9 +15,6 @@ export class Expense {
     required: [true, 'Title is required'],
   })
   title: string;
-
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
-  user: User;
 
   @Prop({
     min: 0,
@@ -50,53 +49,11 @@ export class Expense {
     default: Date.now,
   })
   created: Date;
+
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+  user: User;
 }
 
 //console.log(Expense);
 
 export const ExpenseSchema = SchemaFactory.createForClass(Expense);
-
-/*
-import * as mongoose from 'mongoose';
-import slugify from 'slugify';
-
-const Schema = mongoose.Schema;
-
-export const ExpenseSchema = new Schema({
-  title: {
-    type: String,
-    trim: true,
-    required: [true, 'Title is required'],
-  },
-  amount: {
-    type: Number,
-   
-  },
-  category: {
-   
-  },
-  incurred: {
-   
-  },
-  notes: {
-   
-  },
-  slug: String,
-  // recordedBy: {
-  //   type: ,
-  //   ref: 'User',
-  // },
-  
-});
-
-// Query middleware
-ExpenseSchema.pre(/^find/, function (next) {
-  next();
-});
-
-*/
-
-ExpenseSchema.pre('save', function (next) {
-  this.user = new User();
-  next();
-});
