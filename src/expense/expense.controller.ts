@@ -46,8 +46,8 @@ export class ExpenseController {
   }
 
   @Get('month')
-  async getMonth(@Res() response: any, @Param() params: any) {
-    const stats = await this.expenseService.getCurrentPreviewMonthly();
+  async getMonth(@Res() response: any, @Req() request) {
+    const stats = await this.expenseService.getCurrentPreviewMonthly(request);
     //console.log(request.query);
     return response.status(200).json({
       message: 'success',
@@ -56,8 +56,8 @@ export class ExpenseController {
   }
 
   @Get('expense-by-category')
-  async getExpenseByCategory(@Res() response: any, @Param() params: any) {
-    const stats = await this.expenseService.getExpenseByCategory();
+  async getExpenseByCategory(@Res() response: any, @Req() request: any) {
+    const stats = await this.expenseService.getExpenseByCategory(request);
     //console.log(request.query);
     return response.status(200).json({
       message: 'success',
@@ -90,18 +90,6 @@ export class ExpenseController {
   @Get('expense-stats-month/:category')
   async getExpenseStatsMonth(@Res() response: any, @Param() params: any) {
     const stats = await this.expenseService.getExpenseStatsMonth(
-      params.category,
-    );
-    //console.log(request.query);
-    return response.status(200).json({
-      message: 'success',
-      data: stats,
-    });
-  }
-
-  @Get('expense-stats-year/:category')
-  async getExpenseStatsYear(@Res() response: any, @Param() params: any) {
-    const stats = await this.expenseService.getExpenseStatsYear(
       params.category,
     );
     //console.log(request.query);

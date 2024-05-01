@@ -1,15 +1,9 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
-  Inject,
   Injectable,
-  InternalServerErrorException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Model } from 'mongoose';
-import { MagicStrings } from 'src/helpers/constants';
-import { Users } from 'src/interfaces/interface';
 import { UserDto } from 'src/auth/user.dto';
 import {
   bodyUpdatePasswordDto,
@@ -17,13 +11,9 @@ import {
   loginDto,
   resetPasswordDto,
 } from './dto/auth.dto';
-import * as jwt from 'jsonwebtoken';
 import { JwtService } from '@nestjs/jwt';
-import { HttpExceptionFilter } from 'src/helpers/http-exception.filter';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './auth.schema';
-import * as bcrypt from 'bcrypt';
-import { error } from 'console';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as crypto from 'crypto';
 

@@ -4,7 +4,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { Error, Model } from 'mongoose';
+import mongoose, { Error, Model, Mongoose } from 'mongoose';
 import { Expenses } from 'src/interfaces/interface';
 import { ExpenseDto } from './dto/expense.dto';
 import { MagicStrings } from 'src/helpers/constants';
@@ -102,7 +102,7 @@ export class ExpenseService {
     return stats;
   }
 
-  async getCurrentPreviewMonthly() {
+  async getCurrentPreviewMonthly(req: any) {
     const date = new Date(),
       y = date.getFullYear(),
       m = date.getMonth();
@@ -125,6 +125,7 @@ export class ExpenseService {
             {
               $match: {
                 incurred: { $gte: firstDay, $lt: lastDay },
+                user: new mongoose.Types.ObjectId(req.user._id),
               },
             },
             {
@@ -135,6 +136,7 @@ export class ExpenseService {
             {
               $match: {
                 incurred: { $gte: today, $lt: tomorrow },
+                user: new mongoose.Types.ObjectId(req.user._id),
               },
             },
             {
@@ -145,6 +147,7 @@ export class ExpenseService {
             {
               $match: {
                 incurred: { $gte: yesterday, $lt: today },
+                user: new mongoose.Types.ObjectId(req.user._id),
               },
             },
             {
@@ -158,7 +161,7 @@ export class ExpenseService {
     return currentPreview;
   }
 
-  async getExpenseByCategory() {
+  async getExpenseByCategory(req: any) {
     const date = new Date(),
       y = date.getFullYear(),
       m = date.getMonth();
@@ -170,7 +173,7 @@ export class ExpenseService {
         $facet: {
           average: [
             {
-              $match: { user: '$user' },
+              $match: { user: new mongoose.Types.ObjectId(req.user._id) },
             },
             {
               $group: {
@@ -195,7 +198,7 @@ export class ExpenseService {
             {
               $match: {
                 incurred: { $gte: firstDay, $lt: lastDay },
-                user: '$user',
+                user: new mongoose.Types.ObjectId(req.user._id),
               },
             },
             {
@@ -225,35 +228,6 @@ export class ExpenseService {
     ]);
 
     return expenseByCategory;
-  }
-
-  async getExpenseStatsYear(params: string) {
-    const stats = await this.expenseModel.aggregate([
-      {
-        $match: {
-          $or: [{ category: `${params}` }],
-        },
-      },
-      {
-        $group: {
-          _id: { $year: '$created' },
-          numExpenses: { $sum: 1 },
-          avgAmount: { $avg: '$amount' },
-          maxAmount: { $max: '$amount' },
-          minAmount: { $min: '$amount' },
-
-          year: { $first: { $year: '$created' } },
-        },
-      },
-      {
-        $sort: { avgAmount: -1 },
-      },
-    ]);
-
-    // {
-    //  $dateToString: { format: '%Y-%m-%d', date: '$created' },
-    // },
-    return stats;
   }
 
   async getOneExpense(expenseId: string): Promise<Expense[]> {

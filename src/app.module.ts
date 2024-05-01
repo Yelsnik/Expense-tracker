@@ -9,8 +9,6 @@ import { AuthModule } from './auth/auth.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { TestService } from './test/test.service';
-import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
@@ -33,7 +31,6 @@ import { TestModule } from './test/test.module';
     MongooseModule.forRoot(process.env.DATABASE),
     ExpenseModule,
     AuthModule,
-    TestModule,
   ],
   controllers: [AppController],
   providers: [
