@@ -16,6 +16,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
+    return payload;
+
+    /*
     // Get the user id from the payload
     const { id } = payload;
 
@@ -36,5 +39,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     return user;
+    */
   }
 }

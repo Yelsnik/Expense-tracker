@@ -23,10 +23,12 @@ export class AuthenticationGuard implements CanActivate {
       const request = context.switchToHttp().getRequest();
 
       const token = request.headers.authorization.split(' ')[1];
+      console.log(token);
 
       if (!token) {
         throw new UnauthorizedException('Please login!');
       }
+      // console.log(token);
 
       // verify the token
       const decoded = this.jwtService.verify(token, {
@@ -34,7 +36,7 @@ export class AuthenticationGuard implements CanActivate {
       });
 
       // check if the user exists
-      const user = await this.userModel.findById(decoded.id);
+      const user = await this.userModel.findById(decoded.sub);
 
       if (!user) {
         throw new UnauthorizedException('User does not exist');
@@ -48,8 +50,7 @@ export class AuthenticationGuard implements CanActivate {
       }
 
       request.user = user;
-
-      
+      console.log(user);
 
       // console.log('1', request.user);
     } catch (err) {

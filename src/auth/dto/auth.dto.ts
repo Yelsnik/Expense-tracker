@@ -12,6 +12,8 @@ import {
   isLowercase,
   minLength,
 } from 'class-validator';
+import { PartialType } from '@nestjs/swagger';
+import { UserDto } from './user.dto';
 
 export class loginDto {
   @IsEmail()
@@ -38,3 +40,5 @@ export class bodyUpdatePasswordDto {
   password: string;
   passwordConfirm: string;
 }
+
+export class updateUserDto extends PartialType(UserDto) {}

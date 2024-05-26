@@ -14,7 +14,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UserDto } from 'src/auth/user.dto';
+import { UserDto } from 'src/auth/dto/user.dto';
 import {
   bodyUpdatePasswordDto,
   forgotPasswordDto,

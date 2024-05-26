@@ -34,7 +34,7 @@ export class ApiFeatures {
       // console.log(sortBy);
       this.query = this.query.sort(sortBy);
     } else {
-      this.query = this.query.sort('-created');
+      this.query = this.query.sort('-incurred');
     }
 
     return this;

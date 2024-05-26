@@ -10,6 +10,7 @@ import { JwtStrategy } from './jwt.strategy';
 import passport from 'passport';
 import { APP_GUARD } from '@nestjs/core';
 import { RoleGuard } from './role/role.guard';
+import { RefreshTokenStrategyJwt } from './refreshTokenjwt.strategy';
 
 @Module({
   imports: [
@@ -28,6 +29,9 @@ import { RoleGuard } from './role/role.guard';
     ]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    JwtModule.register({}),
+
+    /*
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -40,9 +44,10 @@ import { RoleGuard } from './role/role.guard';
         };
       },
     }),
+    */
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, RefreshTokenStrategyJwt],
   exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}

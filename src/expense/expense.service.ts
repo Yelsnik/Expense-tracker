@@ -28,8 +28,13 @@ export class ExpenseService {
   }
 
   async getExpenses(request?: any): Promise<Expense[]> {
+    let firstDay = request.query.firstDay;
+    let lastDay = request.query.lastDay;
+    // console.log(new Date(new Date().getFullYear(), new Date().getMonth(), 2));
     const features = new ApiFeatures(
-      this.expenseModel.find({ user: request.user._id }),
+      this.expenseModel.find({
+        user: request.user._id,
+      }),
       request.query,
     )
       .filter()

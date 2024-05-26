@@ -1,11 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   HydratedDocument,
-  Document,
   CallbackWithoutResultAndOptionalError,
 } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { Role } from 'src/helpers/constants';
 import * as crypto from 'crypto';
 
 export type UserDocument = HydratedDocument<User>;
@@ -67,6 +65,9 @@ export class User {
     select: false,
   })
   active: boolean;
+
+  @Prop()
+  refreshToken: string;
 
   @Prop()
   passwordChangedAt: Date;
