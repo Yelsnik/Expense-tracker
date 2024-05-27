@@ -1,8 +1,10 @@
-#COMMON
+#BUILDER
 FROM node:18-alpine as builder
 WORKDIR /app
 COPY . .
-RUN npm install
+RUN npm ci \
+    && npm run build
+
 RUN npm run build
 
 
@@ -13,7 +15,7 @@ CMD [ "npm", "run", "start:dev" ]
 
 #PRODUCTION BUILD
 FROM builder as prod-build
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 #PRODUCTION
 FROM node:18-alpine as prod
