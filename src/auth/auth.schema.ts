@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   HydratedDocument,
   CallbackWithoutResultAndOptionalError,
+  Document,
 } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
@@ -9,7 +10,7 @@ import * as crypto from 'crypto';
 export type UserDocument = HydratedDocument<User>;
 
 @Schema()
-export class User {
+export class User extends Document {
   @Prop({
     required: [true, 'Please add a name'],
   })
@@ -65,9 +66,6 @@ export class User {
     select: false,
   })
   active: boolean;
-
-  @Prop()
-  refreshToken: string;
 
   @Prop()
   passwordChangedAt: Date;

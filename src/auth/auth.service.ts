@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -17,6 +18,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './auth.schema';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as crypto from 'crypto';
+import * as bcrypt from 'bcryptjs';
 import { ConfigService } from '@nestjs/config';
 import * as argon2 from 'argon2';
 
@@ -35,18 +37,9 @@ export class AuthService {
     return await argon2.hash(token);
   }
 
-  // function for updating refresh token
-  async updateRefreshToken(userId: any, refreshToken: string) {
-    const hashedRefreshToken = await this.hashResetToken(refreshToken);
-
-    await this.updateUser(userId, {
-      refreshToken: hashedRefreshToken,
-    });
-  }
-
   // function to get tokens
   async getTokens(userId: any, email: string) {
-    const [accessToken, refreshToken] = await Promise.all([
+    const [accessToken] = await Promise.all([
       this.jwtService.signAsync(
         {
           sub: userId,
@@ -57,24 +50,12 @@ export class AuthService {
           expiresIn: this.configService.get<string | number>('JWT_EXPIRES_IN'),
         },
       ),
-
-      this.jwtService.signAsync(
-        {
-          sub: userId,
-          email,
-        },
-        {
-          secret: this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET'),
-          expiresIn: this.configService.get<string | number>(
-            'JWT_REFRESH_TOKEN_EXPIRES_IN',
-          ),
-        },
-      ),
     ]);
 
-    return { accessToken, refreshToken };
+    return accessToken;
   }
 
+  // function to filter object
   filterObj(obj: any, ...allowedFields: any) {
     const newObj = {};
     Object.keys(obj).forEach((el) => {
@@ -87,38 +68,45 @@ export class AuthService {
   async signUp(data: UserDto) {
     const { name, email, password, passwordConfirm, role } = data;
 
-    const user = await this.userModel.create({
-      name,
-      email,
-      password,
-      passwordConfirm,
-      role,
-    });
+    try {
+      const user = await this.userModel.create({
+        name,
+        email,
+        password,
+        passwordConfirm,
+        role,
+      });
 
-    const tokens = await this.getTokens(user._id, user.email);
-    await this.updateRefreshToken(user._id, tokens.refreshToken);
-    // console.log(tokens);
-
-    return { tokens, user };
+      const tokens = await this.getTokens(user._id, user.email);
+      return { tokens, user };
+    } catch (err) {
+      if (err?.code === 11000) {
+        throw new ConflictException('Duplicate email entered');
+      }
+    }
   }
 
   // sign in function
-  async signIn(data: loginDto): Promise<{ token: any; user: User }> {
+  async signIn(data: loginDto) {
     const { email, password } = data;
 
-    const user = await this.userModel.findOne({ email }).select('+password');
+    let user = await this.userModel.findOne({ email }); //.select('+password');
 
-    if (!user || !(await user.correctPassword(password))) {
+    if (!user) {
       throw new UnauthorizedException(`Invalid email or password`);
     }
 
-    const token = await this.getTokens(user._id, user.email);
-    await this.updateRefreshToken(user._id, token.refreshToken);
-    // console.log(token);
+    const correctPassword = await bcrypt.compare(password, user.password);
 
+    if (!correctPassword) {
+      throw new UnauthorizedException(`Invalid email or password`);
+    }
+
+    console.log(password, user.password, user);
+
+    const tokens = await this.getTokens(user._id, user.email);
     user.password = undefined;
-
-    return { token, user };
+    return { tokens, user };
   }
 
   // forgot password function
@@ -134,7 +122,7 @@ export class AuthService {
 
     console.log(resetToken);
 
-    // send it to user's email
+    // -- send it to user's email
     const resetURL = `${req.protocol}://${req.get(
       'host',
     )}/auth/resetpassword/${resetToken}`;
@@ -151,11 +139,9 @@ export class AuthService {
 
   // reset password function
   async resetPassword(data: resetPasswordDto, token: string): Promise<any> {
-    // get user based on token
+    // -- get user based on token
 
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    // console.log(token);
-
     console.log(hashedToken);
 
     const user = await this.userModel.findOne({
@@ -168,52 +154,49 @@ export class AuthService {
     }
 
     console.log('user', user);
-    // set new password if token has not expired and there is a user
 
+    // -- set new password if token has not expired and there is a user
     user.password = data.password;
     user.passwordConfirm = data.password;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
     await user.save();
-    // update the changed password at property for the current user
 
+    // -- update the changed password at property for the current user
     const newTokens = await this.getTokens(user._id, user.email);
-
     return newTokens;
   }
 
   // update password function
   async updatePassword(userObj: any, body: bodyUpdatePasswordDto) {
-    // get user
-
+    // -- get user
     const user = await this.userModel.findById(userObj.id).select('+password');
 
-    // check if posted password is correct
-
+    // -- check if posted password is correct
     if (!(await user.correctPassword(body.passwordCurrent))) {
       throw new UnauthorizedException(`Your current password is wrong`);
     }
 
-    // if so update password
+    // -- if so update password
     user.password = body.password;
     user.passwordConfirm = body.passwordConfirm;
     await user.save();
 
     const newTokens = await this.getTokens(user._id, user.email);
-
     return newTokens;
   }
 
+  // funtion to update a person's profile
   async updateMe(body: any, userObj: any) {
-    // check if user posts password instead
+    // -- check if user posts password instead
     if (body.password || body.passwordConfirm) {
       throw new BadRequestException(`This route is not for password update`);
     }
 
-    // filter out unwanted field names
+    // -- filter out unwanted field names
     const filtered = this.filterObj(body, 'name', 'email');
 
-    // update user document
+    // -- update user document
     const updatedUser = await this.userModel.findByIdAndUpdate(
       userObj.id,
       filtered,
@@ -226,16 +209,19 @@ export class AuthService {
     return updatedUser;
   }
 
+  // funtion to delete a person's profile
   async deleteMe(request: any) {
     await this.userModel.findByIdAndUpdate(request.user.id, {
       active: false,
     });
   }
 
+  // function to get all users
   async getUsers() {
     return await this.userModel.find({ active: true }).exec();
   }
 
+  // funtion to update users
   async updateUser(id: string, updateUserDto: updateUserDto) {
     return await this.userModel
       .findByIdAndUpdate(id, updateUserDto, {

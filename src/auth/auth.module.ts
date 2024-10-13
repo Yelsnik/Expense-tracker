@@ -10,10 +10,16 @@ import { JwtStrategy } from './jwt.strategy';
 import passport from 'passport';
 import { APP_GUARD } from '@nestjs/core';
 import { RoleGuard } from './role/role.guard';
-import { RefreshTokenStrategyJwt } from './refreshTokenjwt.strategy';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 10,
+      },
+    ]),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeatureAsync([
       {
@@ -29,9 +35,7 @@ import { RefreshTokenStrategyJwt } from './refreshTokenjwt.strategy';
     ]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({}),
-
-    /*
+    // JwtModule.register({}),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
@@ -44,10 +48,16 @@ import { RefreshTokenStrategyJwt } from './refreshTokenjwt.strategy';
         };
       },
     }),
-    */
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenStrategyJwt],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
   exports: [JwtStrategy, PassportModule],
 })
 export class AuthModule {}

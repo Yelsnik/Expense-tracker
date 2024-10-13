@@ -10,6 +10,14 @@ import { User } from '../auth.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 
+export interface decodedObj {
+    sub: string
+    email: string
+    iat: number
+    exp: number
+ 
+}
+
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
   constructor(
@@ -19,44 +27,42 @@ export class AuthenticationGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext) {
-    try {
       const request = context.switchToHttp().getRequest();
+      let token = ''
 
-      const token = request.headers.authorization.split(' ')[1];
-      console.log(token);
-
+      if ( request.headers.authorization &&
+        request.headers.authorization.startsWith("Bearer")){
+           token = request.headers.authorization.split(' ')[1];
+        } else {
+          throw new UnauthorizedException('Please login!')
+        }
+      
       if (!token) {
         throw new UnauthorizedException('Please login!');
       }
-      // console.log(token);
 
       // verify the token
-      const decoded = this.jwtService.verify(token, {
+      const decoded: decodedObj = this.jwtService.verify(token, {
         secret: process.env.JWT_SECRET,
       });
 
+      
       // check if the user exists
       const user = await this.userModel.findById(decoded.sub);
 
       if (!user) {
-        throw new UnauthorizedException('User does not exist');
+      throw new UnauthorizedException('User does not exist');
       }
 
       // check if user changed password after token was issued
       if (user.changedPasswordAfter(decoded.iat)) {
         throw new UnauthorizedException(
-          `User recently changed password. Please log in again!`,
-        );
+         `User recently changed password. Please log in again!`,
+      );  
       }
 
       request.user = user;
-      console.log(user);
-
-      // console.log('1', request.user);
-    } catch (err) {
-      throw new UnauthorizedException(err.message);
-    }
-
+  
     return true;
   }
 }

@@ -19,9 +19,7 @@ import {
   bodyUpdatePasswordDto,
   forgotPasswordDto,
   loginDto,
-  resetPasswordDto,
 } from './dto/auth.dto';
-import { response } from 'express';
 import { AuthenticationGuard } from './authentication/authentication.guard';
 import { ThrottlerGuard } from '@nestjs/throttler';
 
@@ -32,14 +30,12 @@ export class AuthController {
   @Post('sign-up')
   async signUp(@Body() data: UserDto, @Res() response: any) {
     const user = await this.authService.signUp(data);
-
     /*
-.cookie('jwt', user.token, {
+   .cookie('jwt', user.token, {
         // expires: 300,
         secure: true,
       })
     */
-
     return response.status(201).json({
       message: 'success',
       data: user,
@@ -55,7 +51,7 @@ export class AuthController {
     console.log(expires);
 
     return response
-      .cookie('jwt', user.token, { expires: expires, httpOnly: true })
+      .cookie('jwt', user.tokens, { expires: expires, httpOnly: true })
       .status(201)
       .json({
         message: 'success',

@@ -1,11 +1,11 @@
 #BUILDER
-FROM node:18-alpine as builder
+FROM node:20-alpine as builder
 WORKDIR /app
 COPY . .
 RUN npm ci \
     && npm run build
 
-RUN npm run build
+#RUN npm run build
 RUN npm install -g npm@10.8.0
 
 
@@ -20,7 +20,7 @@ RUN npm prune --omit=dev
 
 
 #PRODUCTION
-FROM node:18-alpine as prod
+FROM node:20-alpine as prod
 
 # copy from prod-build to /app/dist
 # set user to node for security

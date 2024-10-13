@@ -32,7 +32,7 @@ export class UserDto {
 
   @IsOptional()
   @IsString({ message: 'Please enter a valid role' })
-  role?: Role;
+  role?
 
   @IsString()
   refreshToken?: string;
