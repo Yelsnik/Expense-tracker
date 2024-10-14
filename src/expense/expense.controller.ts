@@ -20,6 +20,8 @@ import { UpdateExpenseDto } from './dto/updateExpense.dto';
 import { RoleGuard } from 'src/auth/role/role.guard';
 import { AuthenticationGuard } from 'src/auth/authentication/authentication.guard';
 import { Expense } from './expense.schema';
+import { Role } from 'src/helpers/constants';
+import { Roles } from 'src/decorators/roles.decorator';
 
 @Controller('expenses')
 @UseGuards(AuthenticationGuard)
@@ -27,7 +29,6 @@ export class ExpenseController {
   constructor(private readonly expenseService: ExpenseService) {}
 
   @Post()
-  // @Version('1')
   async createExpense(
     @Body() data: Expense,
     @Res() response: any,
@@ -61,9 +62,9 @@ export class ExpenseController {
     });
   }
 
-  @UseGuards(AuthenticationGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Get()
-  // @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN)
   async getExpenses(@Res() response: any, @Req() request: any) {
     const expenses = await this.expenseService.getExpenses(request);
     //console.log(request.user._id);
@@ -95,7 +96,7 @@ export class ExpenseController {
     });
   }
 
-  @UseGuards(AuthenticationGuard, RoleGuard)
+  @UseGuards( RoleGuard)
   @Get(':id')
   // @UseFilters(new MongoExceptionFilter())
   async getOneExpense(@Param() params: any, @Res() response: any) {

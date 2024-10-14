@@ -21,6 +21,7 @@ export class ExpenseService {
   async createExpense(data: Expense, req: any): Promise<Expense> {
     try {
       data.user = req.user._id;
+     console.log(await this.expenseModel.create(data))
       return await this.expenseModel.create(data);
     } catch (err) {
       throw new Error(`${err.message}`);
